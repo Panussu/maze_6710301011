@@ -5,7 +5,7 @@ import time
 # Set up screen
 wn = turtle.Screen()
 wn.bgcolor("white")
-wn.title("Maze Solver Turtle")
+wn.title("Maze Solver with Random Endpoint")
 wn.setup(1366, 768)
 
 # Create maze turtle
@@ -24,7 +24,7 @@ player.shapesize(1.5, 1.5)
 player.penup()
 player.speed(0)
 
-# Generate a random maze with more turns
+# Generate a random maze
 rows, cols = 15, 21
 cell_size = 40
 maze = [["X" for _ in range(cols)] for _ in range(rows)]
@@ -32,10 +32,8 @@ maze = [["X" for _ in range(cols)] for _ in range(rows)]
 def generate_random_maze():
     def carve_passages(y, x):
         directions = [(0, 2), (2, 0), (0, -2), (-2, 0)]
-        
-        for _ in range(2):  # Introduce multiple passes to add complexity
+        for _ in range(2):  # Introduce multiple passes for complexity
             random.shuffle(directions)
-            
             for dy, dx in directions:
                 ny, nx = y + dy, x + dx
                 if 0 <= ny < rows and 0 <= nx < cols - 1 and maze[ny][nx] == "X":
@@ -44,9 +42,14 @@ def generate_random_maze():
                         maze[y + dy // 2][x + dx // 2] = " "
                         carve_passages(ny, nx)
 
-    maze[1][1] = " "
+    maze[1][1] = " "  # Starting point
     carve_passages(1, 1)
-    maze[rows - 2][cols - 2] = "E"  # Set end position
+    
+    # Randomly choose an endpoint in any open area
+    open_cells = [(y, x) for y in range(1, rows) for x in range(1, cols) if maze[y][x] == " "]
+    if open_cells:
+        ey, ex = random.choice(open_cells)
+        maze[ey][ex] = "E"
 
 # Draw the maze
 def draw_maze(maze):
@@ -63,7 +66,7 @@ def draw_maze(maze):
                 maze_turtle.stamp()
             elif maze[y][x] == "E":
                 maze_turtle.goto(screen_x, screen_y)
-                maze_turtle.color("red")  # Mark the end point in red
+                maze_turtle.color("red")
                 maze_turtle.stamp()
 
 # Function to mark the path with yellow
@@ -74,7 +77,7 @@ def mark_path(x, y):
     maze_turtle.color("yellow")
     maze_turtle.stamp()
 
-# Recursive function to solve the maze with backtracking and path marking
+# Recursive function to solve the maze
 def solve_maze(x, y):
     if maze[y][x] == "X" or maze[y][x] == "2":  # Wall or already visited
         return False
@@ -88,14 +91,17 @@ def solve_maze(x, y):
         return True
 
     maze[y][x] = "2"  # Mark the cell as visited
-    mark_path(x, y)  # Mark the current path
+    mark_path(x, y)
     player.goto(-cols * cell_size // 2 + x * cell_size + cell_size // 2, rows * cell_size // 2 - y * cell_size - cell_size // 2)
     wn.update()
     time.sleep(0.05)
 
-    # Recursively explore neighboring cells (right, left, down, up)
-    if solve_maze(x + 1, y) or solve_maze(x - 1, y) or solve_maze(x, y + 1) or solve_maze(x, y - 1):
-        return True
+    # Recursively explore neighboring cells in a random order
+    directions = [(1, 0), (-1, 0), (0, 1), (0, -1)]
+    random.shuffle(directions)
+    for dy, dx in directions:
+        if solve_maze(x + dx, y + dy):
+            return True
 
     # Backtrack
     player.goto(-cols * cell_size // 2 + x * cell_size + cell_size // 2, rows * cell_size // 2 - y * cell_size - cell_size // 2)
