@@ -5,7 +5,7 @@ import time
 # Set up screen
 wn = turtle.Screen()
 wn.bgcolor("white")
-wn.title("Maze Solver with Path Marking")
+wn.title("Maze Solver Turtle")
 wn.setup(1366, 768)
 
 # Create maze turtle
